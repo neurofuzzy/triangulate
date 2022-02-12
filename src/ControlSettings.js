@@ -26,8 +26,8 @@ const ControlSettings = [{
     id: 'numPoints',
     type: 'slider',
     getLabel: (num) => "# of Points: " + num,
-    min: 10,
-    max: 50000,
+    min: 100,
+    max: 5000,
     step: 100
 },
 {

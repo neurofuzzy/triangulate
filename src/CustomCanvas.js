@@ -28,7 +28,7 @@ class CustomCanvas extends Component {
         } else {
             this.drawCircles(ctx);
         }
-
+window.polygons = this.props.polygons;
         // Blend image
         this.blendOriginalImage(ctx);
 
@@ -100,6 +100,7 @@ class CustomCanvas extends Component {
             con.stroke();
         }
         con.closePath();
+
         return true;
     }
     render() {
