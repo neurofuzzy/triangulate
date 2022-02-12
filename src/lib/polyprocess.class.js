@@ -8,12 +8,6 @@
  * @property {Object} data
  */
 
-/** 
- * @typedef Edge
- * @property {Point} a
- * @property {Point} b
- */
-
 /**
  * @typedef Triangle
  * @property {string} id
@@ -24,10 +18,31 @@
 
 /**
  * @typedef Path
- * @property {Edge[]} edges
+ * @property {Point[]} points
  */
 
-const EPSILON = 0.1;
+
+
+function angleBetweenPoints(startPt, endPt) {
+
+  return Math.atan2(endPt.y - startPt.y, endPt.x - startPt.x);
+
+}
+
+function angleBetweenSegments(startPt, midPt, endPt) {
+
+  const angle1 = angleBetweenPoints(startPt, midPt);
+  const angle2 = angleBetweenPoints(midPt, endPt);
+
+  return angle2 - angle1;
+
+}
+
+function absoluteAngleBetweenSegments(startPt, midPt, endPt) {
+
+  return Math.abs(angleBetweenSegments(startPt, midPt, endPt));
+
+}
 
 /**
  * 
@@ -97,12 +112,10 @@ function triangleArrayToTriangle(triangleArr, pointsCache) {
 /**
  * 
  * @param {number[][][]} triangles 
+ * @param {{[key:string]: Point}} pointsCache
  * @returns {Point[]}
  */
-function trianglesToPoints(triangles) {
-  
-  /** @type {{[key:string]: Point}} */
-  const pointsCache = {};
+function trianglesToPoints(triangles, pointsCache) {
 
   return triangles.map(t => triangleArrayToPoints(t, pointsCache)).reduce((acc, p) => acc.concat(p), []);
 
@@ -110,6 +123,31 @@ function trianglesToPoints(triangles) {
 
 export default class PolyProcess {
   
+  /**
+   * 
+   * @param {number[][][]} triangles 
+   */
+  constructor(triangles) {
 
+    this.triangles = triangles;
+    /** @type {{[key:string]: Point}} */
+    this.pointsCache = {};
+    this.points = trianglesToPoints(triangles, this.pointsCache);
+
+  }
+
+  findPath(startPt, angleThresholdDegrees = 15) {
+    
+    let ang = angleThresholdDegrees * Math.PI / 180;
+
+    let usedPoints = [startPt];
+
+
+
+  }
+
+  findPaths() {
+
+  }
 
 }
