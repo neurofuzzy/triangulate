@@ -189,7 +189,7 @@ export default class PolyProcess {
    * @param {number} angleThresholdDegrees 
    * @param {Point[]} globalUsedPoints
    */
-  findPath(startPt, nextPt, angleThresholdDegrees = 0, lengthThreshold = 0, globalUsedPoints = []) {
+  findPath(startPt, nextPt, angleThresholdDegrees = 0, lengthThreshold = 0, globalUsedPoints = [], swirl = false) {
     
     let threshold = angleThresholdDegrees * Math.PI / 180;
 
@@ -209,17 +209,25 @@ export default class PolyProcess {
 
       currentPt.adjacentPoints.forEach(adjPt => {
         if (adjPt !== prevPt && usedPoints.indexOf(adjPt) === -1 && globalUsedPoints.indexOf(adjPt) === -1) {
+          
           // if nextPt is adjacent to prevPt, then they are on the same triangle and we can't go back
           if (prevPt && adjPt.adjacentPoints.indexOf(prevPt) !== -1) {
             return;
           }
+          
           let newRegAng = angleBetweenSegments(prevPt, currentPt, adjPt);
+          let ang = Math.abs(newRegAng);
+          
+          if (swirl) {
+            ang = !isNaN(prevRegAng) ? Math.abs(prevRegAng - newRegAng) : Math.abs(newRegAng);
+          }
+
           candidates.push({
             pt: adjPt,
-            //ang: !isNaN(prevRegAng) ? Math.abs(prevRegAng - newRegAng) : Math.abs(newRegAng),
-            ang: Math.abs(newRegAng),
+            ang,
             regAng: angleBetweenSegments(prevPt, currentPt, adjPt),
           });
+
         }
       });
 
@@ -262,7 +270,7 @@ export default class PolyProcess {
 
   }
 
-  findPaths(angleThresholdDegrees = 15, lengthThreshold = 0, pathLengthThreshold = 5, points = this.points.concat(), globalUsedPoints = []) {
+  findPaths(angleThresholdDegrees = 15, lengthThreshold = 0, pathLengthThreshold = 5, swirl = false, points = this.points.concat(), globalUsedPoints = []) {
 
     points.sort((a, b) => a.x * a.y - b.x * b.y);
 
@@ -288,7 +296,7 @@ export default class PolyProcess {
       let candidatePaths = [];
 
       ap.forEach(adjPt => {
-        const path = this.findPath(startPt, adjPt, angleThresholdDegrees, lengthThreshold, globalUsedPoints);
+        const path = this.findPath(startPt, adjPt, angleThresholdDegrees, lengthThreshold, globalUsedPoints, swirl);
         if (path.length > Math.max(1, pathLengthThreshold)) {
           candidatePaths.push(path);
         }
@@ -316,7 +324,7 @@ export default class PolyProcess {
 
     }
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 0; i++) {
 
       paths.forEach(path => {
         let prevStartPt = path[1];
@@ -335,6 +343,9 @@ export default class PolyProcess {
           let candidates = [];
 
           unusedAdjacentStartPts.forEach(adjPt => {
+            if (adjPt === prevStartPt || adjPt === prevEndPt || adjPt === startPt || adjPt === endPt) {
+              return;
+            }
             let newRegAng = angleBetweenSegments(prevStartPt, startPt, adjPt);
             candidates.push({
               pt: adjPt,
@@ -353,6 +364,9 @@ export default class PolyProcess {
           let candidates = [];
 
           unusedAdjacentEndPts.forEach(adjPt => {
+            if (adjPt === prevStartPt || adjPt === prevEndPt || adjPt === startPt || adjPt === endPt) {
+              return;
+            }
             let newRegAng = angleBetweenSegments(prevEndPt, endPt, adjPt);
             candidates.push({
               pt: adjPt,
@@ -361,7 +375,7 @@ export default class PolyProcess {
           });
     
           candidates.sort((a, b) => a.ang - b.ang);
-          path.unshift(candidates[0]);
+          path.push(candidates[0]);
           globalUsedPoints.push(candidates[0]);
 
         }
@@ -389,7 +403,7 @@ export default class PolyProcess {
         }
       }
     });
-    window['triangles'] = JSON.stringify(jsonTriangles, null, 2);
+    window['triangles'] = JSON.stringify(jsonTriangles);
 
     const jsonPaths = paths.map(path => {
       return path.map(pt => {
@@ -399,7 +413,7 @@ export default class PolyProcess {
         };
       });
     });
-    window['paths'] = JSON.stringify(jsonPaths, null, 2);
+    window['paths'] = JSON.stringify(jsonPaths);
     
     return paths;
 

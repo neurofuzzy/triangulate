@@ -44,7 +44,7 @@ class CustomCanvas extends Component {
     }
     drawLines(ctx) {
         const processor = new PolyProcess(this.props.polygons);
-        const paths = processor.findPaths(10, 0, 0);
+        const paths = processor.findPaths(0, 30, 3);
         
         for (var i = 0, n = paths.length; i < n; ++i) {
             this.drawPath(paths[i], ctx);

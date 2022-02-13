@@ -26,7 +26,7 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            numPoints: 2000,
+            numPoints: 1500,
             backgroundColor:"#fdfdfd", // doesn't work with white or black -- strange
             circleSpacing: 3,
             shape: 'triangles',
