@@ -58,6 +58,10 @@ function angleBetweenSegments(startPt, midPt, endPt) {
   var dAy = midPt.y - startPt.y;
   var dBx = endPt.x - midPt.x;
   var dBy = endPt.y - midPt.y;
+
+  //dAx = dBx; // vertical
+  //dAy = dBy; // horizontal
+  
   var angle = Math.atan2(dAx * dBy - dAy * dBx, dAx * dBx + dAy * dBy);
   if (angle < 0) {angle = angle * -1;}
 
@@ -242,11 +246,8 @@ export default class PolyProcess {
 
   }
 
-  findPaths(angleThresholdDegrees = 15, lengthThreshold = 0, pathLengthThreshold = 5) {
+  findPaths(angleThresholdDegrees = 15, lengthThreshold = 0, pathLengthThreshold = 5, points = this.points.concat(), globalUsedPoints = []) {
 
-    const globalUsedPoints = [];
-
-    const points = this.points.concat();
     points.sort((a, b) => a.x * a.y - b.x * b.y);
 
     const paths = [];
@@ -299,8 +300,62 @@ export default class PolyProcess {
 
     }
 
-    console.log(this.points.length, globalUsedPoints.length)
+    for (let i = 0; i < 3; i++) {
 
+      paths.forEach(path => {
+        let prevStartPt = path[1];
+        let startPt = path[0];
+        let prevEndPt = path[path.length - 2];
+        let endPt = path[path.length - 1];
+
+        if (!startPt.adjacentPoints || !endPt.adjacentPoints) {
+          return;
+        }
+        let unusedAdjacentStartPts = startPt.adjacentPoints.filter(adjPt => globalUsedPoints.indexOf(adjPt) === -1);
+        let unusedAdjacentEndPts = endPt.adjacentPoints.filter(adjPt => globalUsedPoints.indexOf(adjPt) === -1);
+
+        if (unusedAdjacentStartPts.length) {
+
+          let candidates = [];
+
+          unusedAdjacentStartPts.forEach(adjPt => {
+            let newRegAng = angleBetweenSegments(prevStartPt, startPt, adjPt);
+            candidates.push({
+              pt: adjPt,
+              ang: Math.abs(newRegAng),
+            });
+          });
+    
+          candidates.sort((a, b) => a.ang - b.ang);
+          path.unshift(candidates[0]);
+          globalUsedPoints.push(candidates[0]);
+
+        }
+
+        if (unusedAdjacentEndPts.length) {
+
+          let candidates = [];
+
+          unusedAdjacentEndPts.forEach(adjPt => {
+            let newRegAng = angleBetweenSegments(prevEndPt, endPt, adjPt);
+            candidates.push({
+              pt: adjPt,
+              ang: Math.abs(newRegAng),
+            });
+          });
+    
+          candidates.sort((a, b) => a.ang - b.ang);
+          path.unshift(candidates[0]);
+          globalUsedPoints.push(candidates[0]);
+
+        }
+
+      });
+
+    }
+
+    console.log(this.points.length, globalUsedPoints.length)
+    
     return paths;
 
   }
