@@ -5,12 +5,10 @@
  * @property {number} x
  * @property {number} y
  * @property {Point[]} [adjacentPoints]
- * @property {Object} [data]
  */
 
 /**
  * @typedef Triangle
- * @property {string} id
  * @property {Point} a
  * @property {Point} b
  * @property {Point} c
@@ -92,19 +90,20 @@ function arrayToPoint(arr, pointsCache) {
 
   const id = `${Math.round(arr[0])}-${Math.round(arr[1])}`;
 
-  if (pointsCache[id]) {
+  if (pointsCache && pointsCache[id]) {
     return pointsCache[id];
   }
 
   const pt = {
-    id,
     x: arr[0],
     y: arr[1],
     adjacentPoints: [],
-    data: {},
   };
 
-  pointsCache[id] = pt;
+  if (pointsCache) {
+    pt.id = id;
+    pointsCache[id] = pt;
+  }
   
   return pt;
 
@@ -132,6 +131,23 @@ function triangleArrayToPoints(triangleArr, pointsCache) {
   });
 
   return pts;
+
+}
+
+/**
+ * 
+ * @param {number[][]} triangleArr 
+ * @returns {Triangle}
+ */
+ function triangleArrayToTriangle(triangleArr) {
+
+  const p = triangleArrayToPoints(triangleArr, null);
+
+  return {
+    a: p[0],
+    b: p[1],
+    c: p[2],
+  }
 
 }
 
@@ -354,7 +370,36 @@ export default class PolyProcess {
 
     }
 
-    console.log(this.points.length, globalUsedPoints.length)
+    console.log("flow coverage:", this.points.length, globalUsedPoints.length);
+
+    const tris = this.triangles.map(triangleArrayToTriangle);
+    const jsonTriangles = tris.map(tri => {
+      return {
+        a: {
+          x: Math.round(tri.a.x * 10) / 10, 
+          y: Math.round(tri.a.y * 10) / 10
+        },
+        b: {
+          x: Math.round(tri.b.x * 10) / 10,
+          y: Math.round(tri.b.y * 10) / 10
+        },
+        c: {
+          x: Math.round(tri.c.x * 10) / 10,
+          y: Math.round(tri.c.y * 10) / 10
+        }
+      }
+    });
+    window['triangles'] = JSON.stringify(jsonTriangles, null, 2);
+
+    const jsonPaths = paths.map(path => {
+      return path.map(pt => {
+        return {
+          x: Math.round(pt.x * 10) / 10, 
+          y: Math.round(pt.y * 10) / 10
+        };
+      });
+    });
+    window['paths'] = JSON.stringify(jsonPaths, null, 2);
     
     return paths;
 
