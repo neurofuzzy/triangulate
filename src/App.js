@@ -26,7 +26,7 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            numPoints: 2500,
+            numPoints: 2000,
             backgroundColor:"#fdfdfd", // doesn't work with white or black -- strange
             circleSpacing: 3,
             shape: 'triangles',
@@ -38,15 +38,15 @@ class App extends Component {
             blackWhite: false,
             invert: false,
             threshold: 110,
-            contrastIters: 0,
-            smoothIters: 0,
+            contrastIters: 17,
+            smoothIters: 17,
             blur: 0,
             srcCanvas: null,
             mobile: window.innerWidth < mobileThreshold,
             width: window.innerWidth < mobileThreshold ? window.innerWidth : window.innerWidth - menuWidth,
             height: window.innerHeight - 20,
             originalSize: {},
-            smoothType: 'none',
+            smoothType: 'lloyd',
             sampler: null,
             polygons: null,
             canvasCopy: null

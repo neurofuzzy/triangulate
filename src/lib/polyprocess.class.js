@@ -1,11 +1,11 @@
 
 /** 
  * @typedef Point
- * @property {string} id
+ * @property {string} [id]
  * @property {number} x
  * @property {number} y
- * @property {Point[]} adjacentPoints
- * @property {Object} data
+ * @property {Point[]} [adjacentPoints]
+ * @property {Object} [data]
  */
 
 /**
@@ -21,23 +21,57 @@
  * @property {Point[]} points
  */
 
+/**
+ * 
+ * @param {Point} pt1 
+ * @param {Point} pt2 
+ * @returns {number}
+ */
+function distanceBetweenPoints(pt1, pt2) {
 
-
-function angleBetweenPoints(startPt, endPt) {
-
-  return Math.atan2(endPt.y - startPt.y, endPt.x - startPt.x);
+  return Math.sqrt(Math.pow(pt1.x - pt2.x, 2) + Math.pow(pt1.y - pt2.y, 2));
 
 }
 
+function averagePoints (...points) {
+
+  const x = points.reduce((acc, pt) => acc + pt.x, 0) / points.length;
+  const y = points.reduce((acc, pt) => acc + pt.y, 0) / points.length;
+
+  return {
+    x,
+    y,
+  };
+
+}
+
+/**
+ * 
+ * @param {Point} startPt 
+ * @param {Point} midPt 
+ * @param {Point} endPt 
+ * @returns {number}
+ */
 function angleBetweenSegments(startPt, midPt, endPt) {
 
-  const angle1 = angleBetweenPoints(startPt, midPt);
-  const angle2 = angleBetweenPoints(midPt, endPt);
+  var dAx = midPt.x - startPt.x;
+  var dAy = midPt.y - startPt.y;
+  var dBx = endPt.x - midPt.x;
+  var dBy = endPt.y - midPt.y;
+  var angle = Math.atan2(dAx * dBy - dAy * dBx, dAx * dBx + dAy * dBy);
+  if (angle < 0) {angle = angle * -1;}
 
-  return angle2 - angle1;
+  return angle;
 
 }
 
+/**
+ * 
+ * @param {Point} startPt 
+ * @param {Point} midPt 
+ * @param {Point} endPt 
+ * @returns {number}
+ */
 function absoluteAngleBetweenSegments(startPt, midPt, endPt) {
 
   return Math.abs(angleBetweenSegments(startPt, midPt, endPt));
@@ -58,13 +92,17 @@ function arrayToPoint(arr, pointsCache) {
     return pointsCache[id];
   }
 
-  return {
+  const pt = {
     id,
     x: arr[0],
     y: arr[1],
     adjacentPoints: [],
     data: {},
   };
+
+  pointsCache[id] = pt;
+  
+  return pt;
 
 }
 
@@ -83,29 +121,13 @@ function triangleArrayToPoints(triangleArr, pointsCache) {
       if (ptA !== ptB && ptA.adjacentPoints.indexOf(ptB) === -1) {
         ptA.adjacentPoints.push(ptB);
       }
+      if (ptA !== ptB && ptB.adjacentPoints.indexOf(ptA) === -1) {
+        ptB.adjacentPoints.push(ptA);
+      }
     });
   });
 
   return pts;
-
-}
-
-/**
- * 
- * @param {number[][]} triangleArr 
- * @param {{[key:string]: Point}} pointsCache 
- * @returns {Triangle}
- */
-function triangleArrayToTriangle(triangleArr, pointsCache) {
-
-  const p = triangleArrayToPoints(triangleArr, pointsCache);
-
-  return {
-    a: p[0],
-    b: p[1],
-    c: p[2],
-    id: `${p[0].id}-${p[1].id}-${p[2].id}`,
-  }
 
 }
 
@@ -117,7 +139,10 @@ function triangleArrayToTriangle(triangleArr, pointsCache) {
  */
 function trianglesToPoints(triangles, pointsCache) {
 
-  return triangles.map(t => triangleArrayToPoints(t, pointsCache)).reduce((acc, p) => acc.concat(p), []);
+  const pts = triangles.map(t => triangleArrayToPoints(t, pointsCache)).reduce((acc, p) => acc.concat(p), []);
+  
+  // return unique pts;
+  return pts.filter((pt, idx) => pts.indexOf(pt) === idx);
 
 }
 
@@ -130,23 +155,153 @@ export default class PolyProcess {
   constructor(triangles) {
 
     this.triangles = triangles;
+    this.triangles.sort((a, b) => a[0][1] - b[0][1]);
     /** @type {{[key:string]: Point}} */
     this.pointsCache = {};
     this.points = trianglesToPoints(triangles, this.pointsCache);
 
   }
 
-  findPath(startPt, angleThresholdDegrees = 15) {
+  /**
+   * 
+   * @param {Point} startPt 
+   * @param {Point} nextPt 
+   * @param {number} angleThresholdDegrees 
+   * @param {Point[]} globalUsedPoints
+   */
+  findPath(startPt, nextPt, angleThresholdDegrees = 0, lengthThreshold = 0, globalUsedPoints = []) {
     
-    let ang = angleThresholdDegrees * Math.PI / 180;
+    let threshold = angleThresholdDegrees * Math.PI / 180;
 
-    let usedPoints = [startPt];
+    let path = [];
 
+    let usedPoints = [startPt, nextPt];
 
+    let prevPt = startPt;
+    let currentPt = nextPt;
+    let prevRegAng = NaN;
+    let reversed = false;
+
+    while (prevPt && currentPt) {
+
+      /** @type {{ pt: Point, ang: number, regAng: number }[]} */
+      let candidates = [];
+
+      currentPt.adjacentPoints.forEach(adjPt => {
+        if (adjPt !== prevPt && usedPoints.indexOf(adjPt) === -1 && globalUsedPoints.indexOf(adjPt) === -1) {
+          // if nextPt is adjacent to prevPt, then they are on the same triangle and we can't go back
+          if (prevPt && adjPt.adjacentPoints.indexOf(prevPt) !== -1) {
+            return;
+          }
+          let newRegAng = angleBetweenSegments(prevPt, currentPt, adjPt);
+          candidates.push({
+            pt: adjPt,
+            //ang: !isNaN(prevRegAng) ? Math.abs(prevRegAng - newRegAng) : Math.abs(newRegAng),
+            ang: Math.abs(newRegAng),
+            regAng: angleBetweenSegments(prevPt, currentPt, adjPt),
+          });
+        }
+      });
+
+      if (!candidates.length) {
+        break;
+      } 
+
+      candidates.sort((a, b) => a.ang - b.ang);
+
+      let bestCandidate = candidates[0];
+      prevRegAng = bestCandidate.regAng;
+
+      if (
+        (threshold > 0 && bestCandidate.ang > threshold * 5) ||
+        (lengthThreshold > 0 && distanceBetweenPoints(prevPt, bestCandidate.pt) > lengthThreshold)
+        ) {
+        if (reversed || (path.length < 2 && reversed)) {
+          break;
+        }
+        reversed = true;
+        path.reverse();
+        prevPt = path[path.length - 2];
+        currentPt = path[path.length - 1];
+        continue;
+      }
+
+      usedPoints.push(bestCandidate.pt);
+      path.push(bestCandidate.pt);
+
+      prevPt = currentPt;
+      currentPt = bestCandidate.pt;
+
+    }
+
+    if (reversed) {
+      path.reverse();
+    }
+
+    return path;
 
   }
 
-  findPaths() {
+  findPaths(angleThresholdDegrees = 15, lengthThreshold = 0, pathLengthThreshold = 5) {
+
+    const globalUsedPoints = [];
+
+    const points = this.points.concat();
+    points.sort((a, b) => a.x * a.y - b.x * b.y);
+
+    const paths = [];
+
+    const numPts = points.length;
+    const maxTries = numPts * 3;
+    let tries = 0;
+
+    while (points.length) {
+
+      tries++;
+
+      let startPt = points.shift();
+
+      if (globalUsedPoints.indexOf(startPt) !== -1) {
+        continue;
+      }
+
+      const ap = startPt.adjacentPoints;
+
+      /** @type {Point[][]} */
+      let candidatePaths = [];
+
+      ap.forEach(adjPt => {
+        const path = this.findPath(startPt, adjPt, angleThresholdDegrees, lengthThreshold, globalUsedPoints);
+        if (path.length > Math.max(1, pathLengthThreshold)) {
+          candidatePaths.push(path);
+        }
+      });
+
+      if (candidatePaths.length) {
+
+        candidatePaths.sort((a, b) => b.length - a.length);
+
+        const bestPath = candidatePaths[0];
+        paths.push(bestPath);
+        bestPath.forEach(pt => globalUsedPoints.push(pt));
+        const lastPt = bestPath[bestPath.length - 1];
+        points.sort((a, b) => distanceBetweenPoints(lastPt, a) - distanceBetweenPoints(lastPt, b));
+        
+      } else {
+
+        points.push(startPt);
+
+      }
+
+      if (tries > maxTries) {
+        break;
+      }
+
+    }
+
+    console.log(this.points.length, globalUsedPoints.length)
+
+    return paths;
 
   }
 

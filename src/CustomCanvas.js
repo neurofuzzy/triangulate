@@ -1,6 +1,7 @@
 // CustomCanvas
 import React, { Component } from 'react';
 import ColorUtils from './ColorUtils';
+import PolyProcess from './lib/polyprocess.class';
 
 class CustomCanvas extends Component {
     // Draw polygons on update
@@ -25,10 +26,11 @@ class CustomCanvas extends Component {
         // draw polygons
         if (this.props.shape !== "circles") {
             this.drawPolygons(ctx);
+            this.drawLines(ctx);
         } else {
             this.drawCircles(ctx);
         }
-window.polygons = this.props.polygons;
+
         // Blend image
         this.blendOriginalImage(ctx);
 
@@ -38,6 +40,14 @@ window.polygons = this.props.polygons;
     drawPolygons(ctx) {
         for (var i = 0, n = this.props.polygons.length; i < n; ++i) {
             this.drawCell(this.props.polygons[i], ctx);
+        }
+    }
+    drawLines(ctx) {
+        const processor = new PolyProcess(this.props.polygons);
+        const paths = processor.findPaths(10, 0, 0);
+        
+        for (var i = 0, n = paths.length; i < n; ++i) {
+            this.drawPath(paths[i], ctx);
         }
     }
     // Issue: this.props.polygons doesn't currently have the radius....
@@ -100,6 +110,28 @@ window.polygons = this.props.polygons;
             con.stroke();
         }
         con.closePath();
+
+        return true;
+    }
+    // Function to draw path
+    drawPath(path, con) {
+        if (!path || !con)
+            return false;
+
+        // Draw path
+        con.beginPath();
+        con.moveTo(path[0].x, path[0].y);
+        for (var j = 1, m = path.length; j < m; ++j) {
+            con.lineTo(path[j].x, path[j].y);
+        }
+
+        // Fill path var color = getColor(cell);
+        var color = this.colorUtils.getColor(path);
+        con.strokeStyle = "cyan";
+        con.fillStyle = color;
+        con.lineWidth = 0;
+        con.stroke();
+        //con.closePath();
 
         return true;
     }
