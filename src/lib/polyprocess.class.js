@@ -50,33 +50,20 @@ function averagePoints (...points) {
  * @param {Point} endPt 
  * @returns {number}
  */
-function angleBetweenSegments(startPt, midPt, endPt) {
+function angleBetweenSegments(startPt, midPt, endPt, keepVertical = false, keepHorizontal = false) {
 
   var dAx = midPt.x - startPt.x;
   var dAy = midPt.y - startPt.y;
   var dBx = endPt.x - midPt.x;
   var dBy = endPt.y - midPt.y;
 
-  //dAx = dBx; // vertical
-  //dAy = dBy; // horizontal
+  if (keepVertical) dAx = dBx; // vertical
+  if (keepHorizontal) dAy = dBy; // horizontal
   
   var angle = Math.atan2(dAx * dBy - dAy * dBx, dAx * dBx + dAy * dBy);
   if (angle < 0) {angle = angle * -1;}
 
   return angle;
-
-}
-
-/**
- * 
- * @param {Point} startPt 
- * @param {Point} midPt 
- * @param {Point} endPt 
- * @returns {number}
- */
-function absoluteAngleBetweenSegments(startPt, midPt, endPt) {
-
-  return Math.abs(angleBetweenSegments(startPt, midPt, endPt));
 
 }
 
@@ -189,7 +176,7 @@ export default class PolyProcess {
    * @param {number} angleThresholdDegrees 
    * @param {Point[]} globalUsedPoints
    */
-  findPath(startPt, nextPt, angleThresholdDegrees = 0, lengthThreshold = 0, globalUsedPoints = [], swirl = false) {
+  findPath(startPt, nextPt, angleThresholdDegrees = 0, lengthThreshold = 0, globalUsedPoints = [], swirl = false, keepVertical = false, keepHorizontal = false) {
     
     let threshold = angleThresholdDegrees * Math.PI / 180;
 
@@ -215,7 +202,7 @@ export default class PolyProcess {
             return;
           }
           
-          let newRegAng = angleBetweenSegments(prevPt, currentPt, adjPt);
+          let newRegAng = angleBetweenSegments(prevPt, currentPt, adjPt, keepVertical, keepHorizontal);
           let ang = Math.abs(newRegAng);
           
           if (swirl) {
@@ -225,7 +212,7 @@ export default class PolyProcess {
           candidates.push({
             pt: adjPt,
             ang,
-            regAng: angleBetweenSegments(prevPt, currentPt, adjPt),
+            regAng: angleBetweenSegments(prevPt, currentPt, adjPt, keepVertical, keepHorizontal),
           });
 
         }
@@ -270,7 +257,7 @@ export default class PolyProcess {
 
   }
 
-  findPaths(angleThresholdDegrees = 15, lengthThreshold = 0, pathLengthThreshold = 5, swirl = false, points = this.points.concat(), globalUsedPoints = []) {
+  findPaths(angleThresholdDegrees = 15, lengthThreshold = 0, pathLengthMinThreshold = 5, pathLengthMaxThreshold = 5, swirl = false, keepVertical = false, keepHorizontal = false, points = this.points.concat(), globalUsedPoints = []) {
 
     points.sort((a, b) => a.x * a.y - b.x * b.y);
 
@@ -296,10 +283,19 @@ export default class PolyProcess {
       let candidatePaths = [];
 
       ap.forEach(adjPt => {
-        const path = this.findPath(startPt, adjPt, angleThresholdDegrees, lengthThreshold, globalUsedPoints, swirl);
-        if (path.length > Math.max(1, pathLengthThreshold)) {
-          candidatePaths.push(path);
+        const path = this.findPath(startPt, adjPt, angleThresholdDegrees, lengthThreshold, globalUsedPoints, swirl, keepVertical, keepHorizontal);
+        if (path.length === 0) {
+          return;
         }
+        if (pathLengthMinThreshold === 0 || path.length >= Math.max(1, pathLengthMinThreshold)) {
+
+          if (pathLengthMaxThreshold === 0 || path.length <= pathLengthMaxThreshold) {
+            candidatePaths.push(path);
+          } else {
+            candidatePaths.push(path.slice(0, pathLengthMaxThreshold));
+          }
+        }
+ 
       });
 
       if (candidatePaths.length) {
@@ -346,7 +342,7 @@ export default class PolyProcess {
             if (adjPt === prevStartPt || adjPt === prevEndPt || adjPt === startPt || adjPt === endPt) {
               return;
             }
-            let newRegAng = angleBetweenSegments(prevStartPt, startPt, adjPt);
+            let newRegAng = angleBetweenSegments(prevStartPt, startPt, adjPt, keepVertical, keepHorizontal);
             candidates.push({
               pt: adjPt,
               ang: Math.abs(newRegAng),
@@ -367,7 +363,7 @@ export default class PolyProcess {
             if (adjPt === prevStartPt || adjPt === prevEndPt || adjPt === startPt || adjPt === endPt) {
               return;
             }
-            let newRegAng = angleBetweenSegments(prevEndPt, endPt, adjPt);
+            let newRegAng = angleBetweenSegments(prevEndPt, endPt, adjPt, keepVertical, keepHorizontal);
             candidates.push({
               pt: adjPt,
               ang: Math.abs(newRegAng),

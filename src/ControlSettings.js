@@ -47,16 +47,29 @@ const ControlSettings = [{
     label: "Color Options"
 }, {
     id: 'fill',
-    label: "Fill with color",
+    label: "Fill with Color",
     type: 'checkbox'
-},
-{
+}, {
+    id: 'swirl',
+    label: "Make Swirly Paths",
+    type: 'checkbox',
+    group: 'paths'
+}, {
+    id: 'keepVertical',
+    label: "Make Vertical Paths",
+    type: 'checkbox',
+    group: 'paths'
+}, {
+    id: 'keepHorizontal',
+    label: "Make Horizontal Paths",
+    type: 'checkbox',
+    group: 'paths'
+}, {
     id: 'backgroundColor',
     type: 'color-input',
     label: "Background Color: ",
     getDisabled: (d) => d,
-},
-{
+}, {
     id: 'showLines',
     label: "Show Polygon Overlay",
     type: 'checkbox',
@@ -75,6 +88,34 @@ const ControlSettings = [{
     id: 'blackWhite',
     label: "Black and White",
     type: 'toggle'
+}, {
+    id: 'angleThreshold',
+    type: 'slider',
+    getLabel: (num) => "Path Angle Threshold: " + num + " deg",
+    min: 0,
+    max: 60,
+    step: 3
+}, {
+    id: 'lengthThreshold',
+    type: 'slider',
+    getLabel: (num) => "Max Segment Length: " + num,
+    min: 0,
+    max: 200,
+    step: 5
+}, {
+    id: 'pathLengthMinThreshold',
+    type: 'slider',
+    getLabel: (num) => "Path Length Min: " + num,
+    min: 0,
+    max: 10,
+    step: 1
+}, {
+    id: 'pathLengthMaxThreshold',
+    type: 'slider',
+    getLabel: (num) => "Path Length Max: " + num,
+    min: 0,
+    max: 20,
+    step: 1
 }, {
     id: 'invert',
     label: "Invert Black and White",
@@ -122,7 +163,7 @@ const ControlSettings = [{
     type: 'slider',
     getLabel: (num) => "Re-sample for Contrast: " + num + "%",
     min: 0,
-    max: 100,
+    max: 300,
     step: 1,
     getDisabled: (d) => d
 }, {
@@ -130,7 +171,7 @@ const ControlSettings = [{
     type: 'slider',
     getLabel: (num) => "Re-sample to Distribute Points: " + num + " times",
     min: 0,
-    max: 20,
+    max: 30,
     step: 1,
     getDisabled: (d) => d
 }, {

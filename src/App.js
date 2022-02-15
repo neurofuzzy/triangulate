@@ -49,13 +49,20 @@ class App extends Component {
             smoothType: 'lloyd',
             sampler: null,
             polygons: null,
-            canvasCopy: null
+            canvasCopy: null,
+            swirl: false,
+            angleThreshold: 0,
+            lengthThreshold: 0,
+            pathLengthMinThreshold: 0,
+            pathLengthMaxThreshold: 0,
+            keepVertical: false,
+            keepHorizontal: false,
         }
     }
 
     componentDidMount() {
         logPageView();
-        this.uploadFile('./imgs/mountains.png')
+        this.uploadFile('./imgs/big-o.png')
     }
 
     uploadFile(file) {
@@ -196,6 +203,12 @@ class App extends Component {
             backgroundColor: this.state.shape != "circles" && this.state.fill ? true : false
         }
 
+        let swirl = this.state.swirl;
+        let angleThreshold = this.state.angleThreshold;
+        let lengthThreshold = this.state.lengthThreshold;
+        let pathLengthMinThreshold = this.state.pathLengthMinThreshold;
+        let pathLengthMaxThreshold = this.state.pathLengthMaxThreshold;
+
         return (
             <MuiThemeProvider>
               <div>
@@ -218,7 +231,9 @@ class App extends Component {
                   <canvas id="canvasCopy" ref="canvasCopy" />
                   { this.state.srcCanvas !== null &&
                     <CustomCanvas numBlend={ this.state.blend } showLines={ this.state.showLines } srcCanvas={ this.refs.canvasCopy } colorSettings={ colorSettings } onUpdate={ () => this.setDownloadBlob("download", canvasId, "triangle-image.png") }
-                      fill={ this.state.fill } shape={ this.state.shape } canvasId={ canvasId } width={ width } height={ height } polygons={ polygons }
+                      fill={ this.state.fill } shape={ this.state.shape } canvasId={ canvasId } width={ width } height={ height } polygons={ polygons } swirl = { swirl }
+                      angleThreshold={ angleThreshold } lengthThreshold={ lengthThreshold } pathLengthMinThreshold={ pathLengthMinThreshold } pathLengthMaxThreshold={ pathLengthMaxThreshold }
+                      keepVertical={ this.state.keepVertical } keepHorizontal={ this.state.keepHorizontal }
                     /> }
                 </div>
                 { /* figure out a better way to do this: react download file something... */ }
