@@ -264,7 +264,7 @@ export default class PolyProcess {
     const paths = [];
 
     const numPts = points.length;
-    const maxTries = numPts * 3;
+    const maxTries = numPts * 2;
     let tries = 0;
 
     while (points.length) {
