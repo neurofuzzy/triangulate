@@ -26,9 +26,9 @@ const ControlSettings = [{
     id: 'numPoints',
     type: 'slider',
     getLabel: (num) => "# of Points: " + num,
-    min: 100,
-    max: 5000,
-    step: 100
+    min: 50,
+    max: 3000,
+    step: 50
 },
 {
     id: 'fitToScreen',
@@ -163,7 +163,7 @@ const ControlSettings = [{
     type: 'slider',
     getLabel: (num) => "Re-sample for Contrast: " + num + "%",
     min: 0,
-    max: 300,
+    max: 1000,
     step: 1,
     getDisabled: (d) => d
 }, {

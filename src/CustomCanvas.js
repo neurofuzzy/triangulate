@@ -52,6 +52,20 @@ class CustomCanvas extends Component {
     // Issue: this.props.polygons doesn't currently have the radius....
     drawCircles(ctx) {
         if (this.props.polygons === null) return;
+
+        let model = [];
+        for (var i = 0, n = this.props.polygons.length; i < n; ++i) {
+            var c = this.props.polygons[i];
+            var color = this.colorUtils.getDotColor(c, c.radius);
+            console.log(color);
+            if (color.indexOf("rgba") === 0 && parseInt(color.split("(")[1].split(",")[0]) < 50) {
+                model.push(c);
+            } else if (color === "black") {
+                model.push(c);
+            }
+        }
+        window.circles = JSON.stringify(model.map(c => { return { x: c[0], y: c[1], r: c.radius } }));
+
         for (var i = 0, n = this.props.polygons.length; i < n; ++i) {
             this.drawDot(this.props.polygons[i], this.props.polygons[i].radius, ctx);
         }
