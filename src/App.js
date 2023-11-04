@@ -87,6 +87,24 @@ class App extends Component {
             link.download = filename;
         });
     }
+    setDownloadSvg(filename) {
+        let svgString = window["svg"];
+
+        // add elem to DOM and download as file
+
+        // Convert to blob and download
+
+   
+            // Convert to blob and download
+            const blob = new Blob([svgString], { type: "image/svg+xml" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(url);
+        
+    }
 
     inputChangeHandler(event, id, newValue) {
         console.log(event, id, newValue)
@@ -239,6 +257,9 @@ class App extends Component {
                 { /* figure out a better way to do this: react download file something... */ }
                 <a id="download" download>
                   <RaisedButton>Download</RaisedButton>
+                </a>
+                <a id="download_svg" onClick={ () => this.setDownloadSvg("triangle-image.svg") }>
+                  <RaisedButton>Download SVG</RaisedButton>
                 </a>
                 <Footer />
               </div>

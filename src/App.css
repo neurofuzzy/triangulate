@@ -54,7 +54,15 @@
 
 #download {
     position: fixed;
+    right: 150px;
+    bottom: 40px;
+    z-index: 999;
+}
+
+#download_svg {
+    position: fixed;
     right: 0px;
+    width: 120px;
     bottom: 40px;
     z-index: 999;
 }

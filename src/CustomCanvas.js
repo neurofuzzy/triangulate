@@ -2,6 +2,9 @@
 import React, { Component } from 'react';
 import ColorUtils from './ColorUtils';
 import PolyProcess from './lib/polyprocess.class';
+import * as SVG from './lib/svg';
+import { Point } from './lib/geom';
+import { PolygonShape } from './lib/shapes';
 
 class CustomCanvas extends Component {
     // Draw polygons on update
@@ -38,9 +41,20 @@ class CustomCanvas extends Component {
         this.props.onUpdate();
     }
     drawPolygons(ctx) {
+        const polys = [];
         for (var i = 0, n = this.props.polygons.length; i < n; ++i) {
             this.drawCell(this.props.polygons[i], ctx);
+            var color = this.colorUtils.getColor(this.props.polygons[i]);
+            if (color.indexOf("rgba") === 0 && parseInt(color.split("(")[1].split(",")[0]) < 210) {
+                const polyPoints = [];
+                for (var j = 0, m = this.props.polygons[i].length; j < m; ++j) {
+                    polyPoints.push(new Point(this.props.polygons[i][j][0], this.props.polygons[i][j][1]));
+                }
+                polys.push(new PolygonShape(polyPoints));
+            }
         }
+        window.polygons = JSON.stringify(polys);
+        window.svg = SVG.mixedToSVG(0, polys);
     }
     drawLines(ctx) {
         const processor = new PolyProcess(this.props.polygons);
